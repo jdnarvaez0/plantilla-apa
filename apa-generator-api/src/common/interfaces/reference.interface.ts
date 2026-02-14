@@ -59,10 +59,65 @@ export interface ReportReference extends BaseReference {
   url?: string;
 }
 
+export interface NewspaperReference extends BaseReference {
+  type: ReferenceType.NEWSPAPER_ARTICLE;
+  newspaperName: string;
+  pages?: string;
+  url?: string;
+}
+
+export interface MagazineReference extends BaseReference {
+  type: ReferenceType.MAGAZINE_ARTICLE;
+  magazineName: string;
+  volume?: string;
+  issue?: string;
+  pages?: string;
+  url?: string;
+}
+
+export interface FilmReference extends BaseReference {
+  type: ReferenceType.FILM;
+  director?: string;
+  studio?: string;
+  country?: string;
+}
+
+export interface PodcastReference extends BaseReference {
+  type: ReferenceType.PODCAST;
+  podcastName: string;
+  episodeNumber?: string;
+  platform?: string;
+  url?: string;
+}
+
+export interface SocialMediaReference extends BaseReference {
+  type: ReferenceType.SOCIAL_MEDIA;
+  platform: 'Twitter' | 'Facebook' | 'Instagram' | 'LinkedIn' | 'TikTok';
+  handle: string;
+  url: string;
+  accessDate?: Date;
+}
+
+export interface LegalCaseReference extends BaseReference {
+  type: ReferenceType.LEGAL_CASE;
+  caseNumber: string;
+  court: string;
+  reporter?: string;
+  reporterVolume?: string;
+  reporterPages?: string;
+  url?: string;
+}
+
 export type Reference =
   | BookReference
   | JournalReference
   | WebsiteReference
   | ThesisReference
   | ConferencePaperReference
-  | ReportReference;
+  | ReportReference
+  | NewspaperReference
+  | MagazineReference
+  | FilmReference
+  | PodcastReference
+  | SocialMediaReference
+  | LegalCaseReference;
