@@ -1,0 +1,26 @@
+# ==========================================
+# Dockerfile para Desarrollo (Hot Reload)
+# ==========================================
+FROM node:20-alpine
+
+# Instalar dependencias del sistema necesarias para desarrollo
+RUN apk add --no-cache git
+
+# Crear directorio de trabajo
+WORKDIR /app
+
+# Copiar archivos de dependencias
+COPY package*.json ./
+
+# Instalar TODAS las dependencias (incluidas devDependencies)
+# Usamos --legacy-peer-deps para evitar conflictos de versiones
+RUN npm ci --legacy-peer-deps && npm cache clean --force
+
+# Copiar código fuente inicial
+COPY . .
+
+# Exponer puerto
+EXPOSE 3000
+
+# Comando por defecto (puede ser sobreescrito en docker-compose)
+CMD ["npm", "run", "start:dev"]

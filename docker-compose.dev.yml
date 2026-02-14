@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # Backend - Modo Desarrollo
+  # ==========================================
+  backend-dev:
+    build:
+      context: ./apa-generator-api
+      dockerfile: Dockerfile.dev
+    container_name: apa-generator-backend-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - FRONTEND_URL=http://localhost:3001
+    volumes:
+      # Montar código fuente para hot reload
+      - ./apa-generator-api/src:/app/src
+      - ./apa-generator-api/package.json:/app/package.json
+      # No montar node_modules (usar los del contenedor)
+      - /app/node_modules
+    networks:
+      - apa-network-dev
+    command: npm run start:dev
+
+  # ==========================================
+  # Frontend - Modo Desarrollo
+  # ==========================================
+  frontend-dev:
+    build:
+      context: ./apa-generator-web
+      dockerfile: Dockerfile.dev
+    container_name: apa-generator-frontend-dev
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+      - API_URL=http://backend-dev:3000/api/v1
+      - NEXT_TELEMETRY_DISABLED=1
+      - WATCHPACK_POLLING=true
+    volumes:
+      # Montar código fuente para hot reload
+      - ./apa-generator-web/src:/app/src
+      - ./apa-generator-web/public:/app/public
+      - ./apa-generator-web/package.json:/app/package.json
+      - ./apa-generator-web/next.config.mjs:/app/next.config.mjs
+      - ./apa-generator-web/tailwind.config.ts:/app/tailwind.config.ts
+      - ./apa-generator-web/tsconfig.json:/app/tsconfig.json
+      - ./apa-generator-web/components.json:/app/components.json
+      # No montar node_modules ni .next
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend-dev
+    networks:
+      - apa-network-dev
+    command: npm run dev
+
+networks:
+  apa-network-dev:
+    driver: bridge
