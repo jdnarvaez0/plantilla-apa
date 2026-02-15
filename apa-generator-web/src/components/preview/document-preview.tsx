@@ -200,31 +200,31 @@ export function DocumentPreview({ config, references }: DocumentPreviewProps) {
                 <div className="border-t-2 border-dashed border-gray-300" />
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-3 text-xs text-gray-400 flex items-center gap-1">
                   <FileText className="h-3 w-3" />
-                  {config.abstract ? 'Página 2 — Abstract' : 'Página 2'}
+                  {config.abstract ? 'Página 2 — Resumen' : 'Página 2'}
                 </span>
               </div>
 
-              {/* ===== ABSTRACT (Página 2, si existe) ===== */}
+              {/* ===== RESUMEN (Página 2, si existe) ===== */}
               {config.abstract && (
                 <>
                   <div className="px-[1in] py-4">
                     {/* Número de página */}
                     <div className="text-right" style={{ ...apaTextStyle, fontSize: '12pt' }}>2</div>
 
-                    {/* Título "Abstract" centrado, negrita */}
+                    {/* Título "Resumen" centrado, negrita */}
                     <h2 className="text-center font-bold" style={{ ...apaTextStyle, margin: 0, fontSize: '12pt' }}>
-                      Abstract
+                      Resumen
                     </h2>
 
-                    {/* Texto del abstract — SIN sangría (excepción APA) */}
+                    {/* Texto del resumen — SIN sangría (excepción APA) */}
                     <p className="text-left" style={{ ...apaTextStyle, margin: 0 }}>
                       {config.abstract}
                     </p>
 
-                    {/* Keywords — con sangría, en itálica */}
+                    {/* Palabras clave — con sangría, en itálica */}
                     {config.keywords && config.keywords.length > 0 && (
                       <p className="italic" style={{ ...apaTextStyle, margin: 0, textIndent: '0.5in' }}>
-                        <span>Keywords: </span>
+                        <span>Palabras clave: </span>
                         {config.keywords.join(', ')}
                       </p>
                     )}

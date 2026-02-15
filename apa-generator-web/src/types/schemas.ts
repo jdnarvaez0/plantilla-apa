@@ -12,6 +12,14 @@ export const authorSchema = z.object({
 export const coverPageSchema = z.object({
   type: z.nativeEnum(CoverPageType),
   includePageNumber: z.boolean(),
+  runningHead: z
+    .string()
+    .max(50, 'El running head no puede exceder 50 caracteres')
+    .optional(),
+  authorNote: z
+    .string()
+    .max(1000, 'El author note no puede exceder 1000 caracteres')
+    .optional(),
 });
 
 // Document Schema — now with `authors` array

@@ -102,6 +102,8 @@ export function DocumentForm() {
       coverPage: {
         type: CoverPageType.STUDENT,
         includePageNumber: false,
+        runningHead: undefined,
+        authorNote: undefined,
       },
       abstract: "",
       keywords: [],
@@ -219,7 +221,12 @@ export function DocumentForm() {
       course: "",
       professor: "",
       dueDate: new Date().toISOString().split("T")[0],
-      coverPage: { type: CoverPageType.STUDENT, includePageNumber: false },
+      coverPage: { 
+        type: CoverPageType.STUDENT, 
+        includePageNumber: false,
+        runningHead: undefined,
+        authorNote: undefined,
+      },
       abstract: "",
       keywords: [],
     });
@@ -572,6 +579,17 @@ export function DocumentForm() {
                         <Select
                           onValueChange={(value) => {
                             field.onChange(value);
+                            // Auto-generate running head from title if professional
+                            if (value === CoverPageType.PROFESSIONAL) {
+                              const title = form.getValues("title");
+                              if (title) {
+                                const autoRunningHead = generateRunningHead(title);
+                                form.setValue("coverPage.runningHead", autoRunningHead);
+                              }
+                            } else {
+                              form.setValue("coverPage.runningHead", undefined);
+                              form.setValue("coverPage.authorNote", undefined);
+                            }
                             handleFormChange();
                           }}
                           value={field.value}
@@ -591,16 +609,84 @@ export function DocumentForm() {
                     )}
                   />
 
+                  {/* Running Head - Solo para portada profesional */}
+                  {form.watch("coverPage.type") === CoverPageType.PROFESSIONAL && (
+                    <FormField
+                      control={form.control}
+                      name="coverPage.runningHead"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Running Head
+                            <span className="text-xs text-muted-foreground ml-1">(máx. 50 caracteres)</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="TÍTULO ABREVIADO"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) => {
+                                field.onChange(e.target.value.toUpperCase());
+                                handleFormChange();
+                              }}
+                            />
+                          </FormControl>
+                          <div className="flex justify-between">
+                            <p className="text-xs text-muted-foreground">
+                              Título abreviado que aparecerá en el encabezado de cada página
+                            </p>
+                            <span className={`text-xs ${(field.value?.length || 0) > 50 ? "text-destructive" : "text-muted-foreground"}`}>
+                              {(field.value || "").length} / 50
+                            </span>
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
+                  {/* Author Note - Solo para portada profesional */}
+                  {form.watch("coverPage.type") === CoverPageType.PROFESSIONAL && (
+                    <FormField
+                      control={form.control}
+                      name="coverPage.authorNote"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Author Note
+                            <span className="text-xs text-muted-foreground ml-1">(opcional)</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Información adicional sobre los autores, correspondencia, agradecimientos..."
+                              className="min-h-[80px] resize-y"
+                              {...field}
+                              value={field.value || ""}
+                              onChange={(e) => {
+                                field.onChange(e.target.value);
+                                handleFormChange();
+                              }}
+                            />
+                          </FormControl>
+                          <p className="text-xs text-muted-foreground">
+                            Aparecerá al final de la portada. Incluye correspondencia, agradecimientos, etc.
+                          </p>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
+
                   <Separator />
 
-                  {/* Abstract */}
+                  {/* Resumen */}
                   <FormField
                     control={form.control}
                     name="abstract"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
-                          Abstract
+                          Resumen
                           <span className="text-xs text-muted-foreground ml-1">(opcional, máx. 250 palabras)</span>
                         </FormLabel>
                         <FormControl>
@@ -739,6 +825,35 @@ export function DocumentForm() {
       </Dialog>
     </div>
   );
+}
+
+// ============================================
+// UTILITIES
+// ============================================
+
+/**
+ * Genera un running head automático a partir del título
+ * Toma las primeras palabras significativas, máximo 50 caracteres
+ */
+function generateRunningHead(title: string): string {
+  const skipWords = ['the', 'a', 'an', 'el', 'la', 'los', 'las', 'un', 'una', 'de', 'del', 'en', 'y', 'o'];
+  const words = title.split(/\s+/);
+  
+  let result = '';
+  for (const word of words) {
+    const cleanWord = word.replace(/[^\w]/g, '').toUpperCase();
+    if (!cleanWord) continue;
+    
+    if (result === '' && skipWords.includes(cleanWord.toLowerCase())) {
+      continue;
+    }
+    
+    const newResult = result ? `${result} ${cleanWord}` : cleanWord;
+    if (newResult.length > 50) break;
+    result = newResult;
+  }
+  
+  return result || title.substring(0, 50).toUpperCase();
 }
 
 // ============================================

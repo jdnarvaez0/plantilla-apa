@@ -10,6 +10,10 @@ export interface Author {
 export interface CoverPageConfig {
   type: CoverPageType;
   includePageNumber?: boolean;
+  /** Running head - título abreviado para portada profesional (max 50 chars) */
+  runningHead?: string;
+  /** Author note - nota del autor para portada profesional */
+  authorNote?: string;
 }
 
 export interface DocumentConfig {

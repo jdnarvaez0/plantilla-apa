@@ -109,32 +109,32 @@ function validateDocument(
         });
     }
 
-    // ── Abstract ──
+    // ── Resumen ──
     if (config.abstract && config.abstract.trim().length > 0) {
         const abstractWords = config.abstract.trim().split(/\s+/).filter(Boolean).length;
         if (abstractWords > 250) {
             rules.push({
                 id: 'abstract-length',
-                category: 'Abstract',
-                label: 'Abstract extenso',
+                category: 'Resumen',
+                label: 'Resumen extenso',
                 level: 'warning',
-                message: `Tu abstract tiene ${abstractWords} palabras. APA limita a 250 palabras máximo.`,
+                message: `Tu resumen tiene ${abstractWords} palabras. APA limita a 250 palabras máximo.`,
             });
         } else if (abstractWords < 50) {
             rules.push({
                 id: 'abstract-short',
-                category: 'Abstract',
-                label: 'Abstract breve',
+                category: 'Resumen',
+                label: 'Resumen breve',
                 level: 'warning',
-                message: `Tu abstract tiene ${abstractWords} palabras. Considera expandirlo (mínimo ~150 palabras recomendado).`,
+                message: `Tu resumen tiene ${abstractWords} palabras. Considera expandirlo (mínimo ~150 palabras recomendado).`,
             });
         } else {
             rules.push({
                 id: 'abstract-ok',
-                category: 'Abstract',
-                label: 'Abstract correcto',
+                category: 'Resumen',
+                label: 'Resumen correcto',
                 level: 'success',
-                message: `Abstract con ${abstractWords}/250 palabras — dentro del rango APA.`,
+                message: `Resumen con ${abstractWords}/250 palabras — dentro del rango APA.`,
             });
         }
     }
@@ -148,7 +148,7 @@ function validateDocument(
                 category: 'Keywords',
                 label: 'Sin palabras clave',
                 level: 'warning',
-                message: 'Si incluyes abstract, APA recomienda 3-5 palabras clave debajo.',
+                message: 'Si incluyes resumen, APA recomienda 3-5 palabras clave debajo.',
             });
         } else if (keywords.length < 3) {
             rules.push({

@@ -7,6 +7,7 @@ import {
   AlignmentType,
   Header,
   PageNumber,
+  BorderStyle,
 } from 'docx';
 import { APA_CONFIG } from '../../config/apa.config';
 import { ApaFormatterService } from '../apa-formatter/apa-formatter.service';
@@ -27,12 +28,14 @@ export class DocxGeneratorService implements IDocxGeneratorService {
     references?: Reference[],
   ): Promise<Buffer> {
     const sections = [];
+    const isProfessional = config.coverPage?.type === CoverPageType.PROFESSIONAL;
+    const runningHead = config.coverPage?.runningHead;
 
     // Portada (siempre la primera sección)
-    if (config.coverPage?.type === CoverPageType.STUDENT) {
-      sections.push(this.createCoverPageStudent(config));
-    } else {
+    if (isProfessional) {
       sections.push(this.createCoverPageProfessional(config));
+    } else {
+      sections.push(this.createCoverPageStudent(config));
     }
 
     // Cuerpo del documento (segunda sección)
@@ -52,23 +55,24 @@ export class DocxGeneratorService implements IDocxGeneratorService {
       },
       children: this.createBodyContent(config, references),
       headers: {
-        default: this.createHeader(),
+        // En portada profesional: running head + número de página
+        // En estudiante: solo número de página
+        default: this.createHeader(isProfessional, runningHead),
       },
     });
 
     const doc = new Document({
       // Estilos default del documento — fuerza Times New Roman 12pt como base
-      // Sin esto, Word puede aplicar Calibri 11pt o su propio default
       styles: {
         default: {
           document: {
             run: {
               font: APA_CONFIG.typography.font,
-              size: APA_CONFIG.typography.size, // 24 half-points = 12pt
+              size: APA_CONFIG.typography.size,
             },
             paragraph: {
               spacing: {
-                line: APA_CONFIG.typography.lineSpacing, // 480 = doble espacio
+                line: APA_CONFIG.typography.lineSpacing,
                 before: 0,
                 after: 0,
               },
@@ -268,23 +272,253 @@ export class DocxGeneratorService implements IDocxGeneratorService {
 
   /**
    * Portada para VERSIÓN PROFESIONAL — APA 7ª Edición
-   * Similar a estudiante pero con running head
+   *
+   * Según APA 7th Ed. (Section 2.4):
+   * - Running head: título abreviado (max 50 chars) en mayúsculas, alineado a la izquierda
+   * - Número de página en la esquina superior derecha (página 1)
+   * - Título centrado, negrita, 3-4 líneas doble espacio desde el margen superior
+   * - Nombre del autor (nombre completo)
+   * - Afiliación institucional
+   * - Author note al final de la página (opcional)
+   * - Todo centrado, doble espacio
    */
   private createCoverPageProfessional(config: DocumentConfig): any {
-    // Por ahora reutiliza la de estudiante
-    // TODO: agregar running head y author note
-    return this.createCoverPageStudent(config);
+    const { title, institution, coverPage } = config;
+    const authors = this.resolveAuthors(config);
+    const { typography } = APA_CONFIG;
+    const lineSpacing = typography.lineSpacing;
+    const runningHead = coverPage?.runningHead || this.generateRunningHead(title);
+
+    const paragraphs: Paragraph[] = [];
+
+    // === Espacio superior ===
+    // 3-4 líneas doble espacio desde el margen superior
+    for (let i = 0; i < 3; i++) {
+      paragraphs.push(
+        new Paragraph({
+          spacing: { line: lineSpacing, before: 0, after: 0 },
+        }),
+      );
+    }
+
+    // === Título ===
+    paragraphs.push(
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { line: lineSpacing, before: 0, after: 0 },
+        children: [
+          new TextRun({
+            text: title,
+            bold: true,
+            font: typography.font,
+            size: typography.size,
+          }),
+        ],
+      }),
+    );
+
+    // Línea en blanco después del título
+    paragraphs.push(
+      new Paragraph({
+        spacing: { line: lineSpacing, before: 0, after: 0 },
+      }),
+    );
+
+    // === Nombres de los autores ===
+    for (const author of authors) {
+      const fullName = `${author.firstName}${
+        author.middleName ? ' ' + author.middleName : ''
+      } ${author.lastName}`;
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { line: lineSpacing, before: 0, after: 0 },
+          children: [
+            new TextRun({
+              text: fullName,
+              font: typography.font,
+              size: typography.size,
+            }),
+          ],
+        }),
+      );
+    }
+
+    // === Afiliación institucional ===
+    if (institution) {
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { line: lineSpacing, before: 0, after: 0 },
+          children: [
+            new TextRun({
+              text: institution,
+              font: typography.font,
+              size: typography.size,
+            }),
+          ],
+        }),
+      );
+    }
+
+    // === Author Note ===
+    // Al final de la página, centrado, precedido por "Author Note"
+    if (coverPage?.authorNote) {
+      // Agregar espacios para empujar el author note hacia abajo
+      // APA no especifica exactamente dónde, pero debe estar al final
+      for (let i = 0; i < 4; i++) {
+        paragraphs.push(
+          new Paragraph({
+            spacing: { line: lineSpacing, before: 0, after: 0 },
+          }),
+        );
+      }
+
+      // Título "Author Note" centrado, negrita
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { line: lineSpacing, before: 0, after: 0 },
+          children: [
+            new TextRun({
+              text: 'Author Note',
+              bold: true,
+              font: typography.font,
+              size: typography.size,
+            }),
+          ],
+        }),
+      );
+
+      // Contenido del author note
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { line: lineSpacing, before: 0, after: 0 },
+          children: [
+            new TextRun({
+              text: coverPage.authorNote,
+              font: typography.font,
+              size: typography.size,
+            }),
+          ],
+        }),
+      );
+    }
+
+    return {
+      properties: {
+        page: {
+          margin: {
+            top: APA_CONFIG.margins.top,
+            bottom: APA_CONFIG.margins.bottom,
+            left: APA_CONFIG.margins.left,
+            right: APA_CONFIG.margins.right,
+          },
+          pageNumbers: {
+            start: 1,
+          },
+        },
+      },
+      children: paragraphs,
+      headers: {
+        // Header profesional: running head a la izquierda + número de página a la derecha
+        default: this.createProfessionalHeader(runningHead),
+      },
+    };
   }
 
   /**
-   * Crea el encabezado con número de página
-   * APA 7th Ed.: Número de página flush-right en el header
+   * Genera un running head automático a partir del título
+   * Toma las primeras palabras significativas, máximo 50 caracteres
    */
-  private createHeader(): Header {
+  private generateRunningHead(title: string): string {
+    // Eliminar palabras comunes del inicio
+    const skipWords = ['the', 'a', 'an', 'el', 'la', 'los', 'las', 'un', 'una'];
+    const words = title.split(/\s+/);
+    
+    let result = '';
+    for (const word of words) {
+      const cleanWord = word.replace(/[^\w]/g, '').toUpperCase();
+      if (!cleanWord) continue;
+      
+      // Si es la primera palabra y está en skipWords, saltarla
+      if (result === '' && skipWords.includes(cleanWord.toLowerCase())) {
+        continue;
+      }
+      
+      const newResult = result ? `${result} ${cleanWord}` : cleanWord;
+      if (newResult.length > 50) break;
+      result = newResult;
+    }
+    
+    return result || title.substring(0, 50).toUpperCase();
+  }
+
+  /**
+   * Crea el encabezado para páginas del cuerpo del documento
+   * APA 7th Ed.: Para portada profesional, incluye running head
+   */
+  private createHeader(
+    includeRunningHead: boolean = false,
+    runningHeadText?: string,
+  ): Header {
+    const { typography } = APA_CONFIG;
+
+    // Si es portada profesional y hay running head, mostrarlo a la izquierda
+    if (includeRunningHead && runningHeadText) {
+      return new Header({
+        children: [
+          new Paragraph({
+            alignment: AlignmentType.LEFT,
+            children: [
+              new TextRun({
+                text: runningHeadText,
+                font: typography.font,
+                size: typography.size,
+              }),
+            ],
+          }),
+        ],
+      });
+    }
+
+    // Portada estudiante: solo número de página
+    return new Header({
+      children: [
+        new Paragraph({
+          alignment: AlignmentType.RIGHT,
+          children: [
+            new TextRun({
+              children: [PageNumber.CURRENT],
+              font: typography.font,
+              size: typography.size,
+            }),
+          ],
+        }),
+      ],
+    });
+  }
+
+  /**
+   * Crea el encabezado para la portada profesional
+   * APA 7th Ed.: Running head a la izquierda + número de página a la derecha
+   */
+  private createProfessionalHeader(runningHead: string): Header {
     const { typography } = APA_CONFIG;
 
     return new Header({
       children: [
+        new Paragraph({
+          alignment: AlignmentType.LEFT,
+          children: [
+            new TextRun({
+              text: runningHead,
+              font: typography.font,
+              size: typography.size,
+            }),
+          ],
+        }),
         new Paragraph({
           alignment: AlignmentType.RIGHT,
           children: [
@@ -319,14 +553,14 @@ export class DocxGeneratorService implements IDocxGeneratorService {
     // === Abstract (si existe) ===
     // APA 7th Ed.: Abstract va en su propia página después de la portada
     if (config.abstract) {
-      // Título "Abstract" centrado, negrita
+      // Título "Resumen" centrado, negrita
       paragraphs.push(
         new Paragraph({
           alignment: AlignmentType.CENTER,
           spacing: { line: lineSpacing, before: 0, after: 0 },
           children: [
             new TextRun({
-              text: 'Abstract',
+              text: 'Resumen',
               bold: true,
               font: typography.font,
               size: typography.size,
@@ -358,7 +592,7 @@ export class DocxGeneratorService implements IDocxGeneratorService {
             spacing: { line: lineSpacing, before: 0, after: 0 },
             children: [
               new TextRun({
-                text: 'Keywords: ',
+                text: 'Palabras clave: '
                 italics: true,
                 font: typography.font,
                 size: typography.size,

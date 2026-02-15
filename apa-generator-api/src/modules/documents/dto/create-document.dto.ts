@@ -61,6 +61,31 @@ class CoverPageConfigDto {
   @IsOptional()
   @IsBoolean({ message: 'includePageNumber debe ser verdadero o falso' })
   includePageNumber?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'Running head (título abreviado) - solo para portada profesional. Máximo 50 caracteres.',
+    example: 'SOFTWARE EN ARGENTINA',
+    maxLength: 50,
+  })
+  @IsOptional()
+  @IsString({ message: 'El running head debe ser un texto' })
+  @MaxLength(50, {
+    message: 'El running head no puede exceder 50 caracteres (norma APA)',
+  })
+  runningHead?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Author note - solo para portada profesional. Información adicional sobre los autores.',
+    example: 'Correspondencia: Juan Pérez, Departamento de Psicología...',
+  })
+  @IsOptional()
+  @IsString({ message: 'El author note debe ser un texto' })
+  @MaxLength(1000, {
+    message: 'El author note no puede exceder 1000 caracteres',
+  })
+  authorNote?: string;
 }
 
 export class CreateDocumentDto {
