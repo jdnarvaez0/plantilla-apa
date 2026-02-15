@@ -84,6 +84,13 @@ const createInitialConfig = (): Partial<DocumentConfig> => ({
   },
   abstract: "",
   keywords: [],
+  introduction: "",
+  sectionOptions: {
+    coverPage: true,
+    abstract: true,
+    introduction: true,
+    references: true,
+  },
 });
 
 const initialState: DocumentState = {

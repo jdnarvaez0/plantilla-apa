@@ -31,11 +31,21 @@ export class DocxGeneratorService implements IDocxGeneratorService {
     const isProfessional = config.coverPage?.type === CoverPageType.PROFESSIONAL;
     const runningHead = config.coverPage?.runningHead;
 
-    // Portada (siempre la primera sección)
-    if (isProfessional) {
-      sections.push(this.createCoverPageProfessional(config));
-    } else {
-      sections.push(this.createCoverPageStudent(config));
+    // Opciones de secciones (por defecto todo true)
+    const opts = {
+      coverPage: config.sectionOptions?.coverPage !== false,
+      abstract: config.sectionOptions?.abstract !== false,
+      introduction: config.sectionOptions?.introduction !== false,
+      references: config.sectionOptions?.references !== false,
+    };
+
+    // Portada (opcional)
+    if (opts.coverPage) {
+      if (isProfessional) {
+        sections.push(this.createCoverPageProfessional(config));
+      } else {
+        sections.push(this.createCoverPageStudent(config));
+      }
     }
 
     // Cuerpo del documento (segunda sección)
@@ -49,11 +59,11 @@ export class DocxGeneratorService implements IDocxGeneratorService {
             right: APA_CONFIG.margins.right,
           },
           pageNumbers: {
-            start: 2,
+            start: opts.coverPage ? 2 : 1,
           },
         },
       },
-      children: this.createBodyContent(config, references),
+      children: this.createBodyContent(config, references, opts),
       headers: {
         // En portada profesional: running head + número de página
         // En estudiante: solo número de página
@@ -545,14 +555,20 @@ export class DocxGeneratorService implements IDocxGeneratorService {
   private createBodyContent(
     config: DocumentConfig,
     references?: Reference[],
+    opts?: { abstract?: boolean; introduction?: boolean; references?: boolean },
   ): Paragraph[] {
     const { typography } = APA_CONFIG;
     const lineSpacing = typography.lineSpacing;
     const paragraphs: Paragraph[] = [];
 
-    // === Abstract (si existe) ===
+    // Por defecto todo true si no se especifican opciones
+    const includeAbstract = opts?.abstract !== false;
+    const includeIntroduction = opts?.introduction !== false;
+    const includeReferences = opts?.references !== false;
+
+    // === Abstract (Resumen) ===
     // APA 7th Ed.: Abstract va en su propia página después de la portada
-    if (config.abstract) {
+    if (includeAbstract && config.abstract) {
       // Título "Resumen" centrado, negrita
       paragraphs.push(
         new Paragraph({
@@ -592,7 +608,7 @@ export class DocxGeneratorService implements IDocxGeneratorService {
             spacing: { line: lineSpacing, before: 0, after: 0 },
             children: [
               new TextRun({
-                text: 'Palabras clave: '
+                text: 'Palabras clave: ',
                 italics: true,
                 font: typography.font,
                 size: typography.size,
@@ -634,24 +650,49 @@ export class DocxGeneratorService implements IDocxGeneratorService {
       }),
     );
 
-    // Párrafo placeholder para el contenido del cuerpo
-    paragraphs.push(
-      new Paragraph({
-        indent: { firstLine: 720 }, // Sangría de primera línea
-        spacing: { line: lineSpacing, before: 0, after: 0 },
-        children: [
-          new TextRun({
-            text: '[El contenido de tu documento va aquí. Cada párrafo debe comenzar con una sangría de 0.5 pulgadas y usar doble espacio.]',
-            font: typography.font,
-            size: typography.size,
-            color: '808080',
+    // === Introducción ===
+    // Contenido real del documento proporcionado por el usuario
+    if (includeIntroduction && config.introduction) {
+      // Dividir la introducción en párrafos (por saltos de línea)
+      const introParagraphs = config.introduction
+        .split('\n\n')
+        .filter((p) => p.trim().length > 0);
+
+      for (const introPara of introParagraphs) {
+        paragraphs.push(
+          new Paragraph({
+            indent: { firstLine: 720 }, // Sangría de primera línea
+            spacing: { line: lineSpacing, before: 0, after: 0 },
+            children: [
+              new TextRun({
+                text: introPara.trim(),
+                font: typography.font,
+                size: typography.size,
+              }),
+            ],
           }),
-        ],
-      }),
-    );
+        );
+      }
+    } else if (!config.introduction) {
+      // Párrafo placeholder si no hay introducción
+      paragraphs.push(
+        new Paragraph({
+          indent: { firstLine: 720 },
+          spacing: { line: lineSpacing, before: 0, after: 0 },
+          children: [
+            new TextRun({
+              text: '[El contenido de tu documento va aquí. Cada párrafo debe comenzar con una sangría de 0.5 pulgadas y usar doble espacio.]',
+              font: typography.font,
+              size: typography.size,
+              color: '808080',
+            }),
+          ],
+        }),
+      );
+    }
 
     // === Referencias (si existen) ===
-    if (references && references.length > 0) {
+    if (includeReferences && references && references.length > 0) {
       // Salto de página antes de referencias
       // APA 7th Ed.: Referencias empiezan en una nueva página
       paragraphs.push(

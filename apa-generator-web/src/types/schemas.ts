@@ -22,6 +22,14 @@ export const coverPageSchema = z.object({
     .optional(),
 });
 
+// Opciones de secciones Schema
+export const sectionOptionsSchema = z.object({
+  coverPage: z.boolean().optional(),
+  abstract: z.boolean().optional(),
+  introduction: z.boolean().optional(),
+  references: z.boolean().optional(),
+});
+
 // Document Schema — now with `authors` array
 export const documentSchema = z.object({
   type: z.nativeEnum(DocumentType),
@@ -34,6 +42,8 @@ export const documentSchema = z.object({
   coverPage: coverPageSchema,
   abstract: z.string().optional(),
   keywords: z.array(z.string()).optional(),
+  introduction: z.string().max(20000, 'La introducción no puede exceder 20000 caracteres').optional(),
+  sectionOptions: sectionOptionsSchema.optional(),
 });
 
 // Reference Schemas

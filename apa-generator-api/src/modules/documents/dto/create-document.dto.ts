@@ -204,4 +204,67 @@ export class CreateDocumentDto {
   })
   @IsString({ each: true, message: 'Cada palabra clave debe ser un texto' })
   keywords?: string[];
+
+  @ApiPropertyOptional({
+    description:
+      'Introducción del trabajo. Es el contenido inicial del cuerpo del documento.',
+    example:
+      'El desarrollo de software en América Latina ha experimentado un crecimiento significativo...',
+  })
+  @IsOptional()
+  @IsString({ message: 'La introducción debe ser un texto' })
+  @MaxLength(20000, {
+    message: 'La introducción no puede exceder 20000 caracteres',
+  })
+  introduction?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Opciones para incluir/excluir secciones del documento. Si no se especifica, se incluyen todas.',
+    type: 'object',
+    example: {
+      coverPage: true,
+      abstract: true,
+      introduction: true,
+      references: true,
+    },
+  })
+  @IsOptional()
+  @ValidateNested({ message: 'Las opciones de sección son inválidas' })
+  @Type(() => DocumentSectionOptionsDto)
+  sectionOptions?: DocumentSectionOptionsDto;
+}
+
+class DocumentSectionOptionsDto {
+  @ApiPropertyOptional({
+    description: 'Incluir portada',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'coverPage debe ser verdadero o falso' })
+  coverPage?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Incluir resumen (abstract)',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'abstract debe ser verdadero o falso' })
+  abstract?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Incluir introducción',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'introduction debe ser verdadero o falso' })
+  introduction?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Incluir referencias bibliográficas',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'references debe ser verdadero o falso' })
+  references?: boolean;
 }

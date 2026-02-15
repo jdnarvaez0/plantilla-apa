@@ -107,6 +107,13 @@ export function DocumentForm() {
       },
       abstract: "",
       keywords: [],
+      introduction: "",
+      sectionOptions: {
+        coverPage: true,
+        abstract: true,
+        introduction: true,
+        references: true,
+      },
     }), []),
     mode: "onChange",
   });
@@ -136,9 +143,18 @@ export function DocumentForm() {
         coverPage: {
           type: (documentConfig.coverPage?.type as CoverPageType) || CoverPageType.STUDENT,
           includePageNumber: documentConfig.coverPage?.includePageNumber || false,
+          runningHead: documentConfig.coverPage?.runningHead,
+          authorNote: documentConfig.coverPage?.authorNote,
         },
         abstract: documentConfig.abstract || "",
         keywords: unfreeze(documentConfig.keywords) || [],
+        introduction: documentConfig.introduction || "",
+        sectionOptions: documentConfig.sectionOptions || {
+          coverPage: true,
+          abstract: true,
+          introduction: true,
+          references: true,
+        },
       }, { keepDefaultValues: true });
 
       isInitialized.current = true;
@@ -229,6 +245,13 @@ export function DocumentForm() {
       },
       abstract: "",
       keywords: [],
+      introduction: "",
+      sectionOptions: {
+        coverPage: true,
+        abstract: true,
+        introduction: true,
+        references: true,
+      },
     });
     setReferences([]);
     isInitialized.current = true; // Avoid reload from store
@@ -712,6 +735,41 @@ export function DocumentForm() {
                     )}
                   />
 
+                  {/* Introducción */}
+                  <FormField
+                    control={form.control}
+                    name="introduction"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Introducción
+                          <span className="text-xs text-muted-foreground ml-1">(opcional)</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Escribe la introducción de tu trabajo..."
+                            className="min-h-[150px] resize-y"
+                            {...field}
+                            value={field.value || ""}
+                            onChange={(e) => {
+                              field.onChange(e.target.value);
+                              handleFormChange();
+                            }}
+                          />
+                        </FormControl>
+                        <div className="flex justify-between">
+                          <p className="text-xs text-muted-foreground">
+                            Contenido inicial del cuerpo del documento. Se formateará con sangría APA.
+                          </p>
+                          <span className="text-xs text-muted-foreground">
+                            {(field.value || "").length} caracteres
+                          </span>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   {/* Keywords */}
                   <KeywordsInput
                     keywords={form.watch("keywords") || []}
@@ -720,6 +778,68 @@ export function DocumentForm() {
                       handleFormChange();
                     }}
                   />
+
+                  <Separator />
+
+                  {/* Selector de Secciones */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-base">Secciones a incluir</FormLabel>
+                      <span className="text-xs text-muted-foreground">
+                        Personaliza qué páginas generar
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 p-4 border rounded-lg bg-muted/30">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={form.watch("sectionOptions.coverPage") !== false}
+                          onChange={(e) => {
+                            form.setValue("sectionOptions.coverPage", e.target.checked);
+                            handleFormChange();
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm">Portada</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={form.watch("sectionOptions.abstract") !== false}
+                          onChange={(e) => {
+                            form.setValue("sectionOptions.abstract", e.target.checked);
+                            handleFormChange();
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm">Resumen</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={form.watch("sectionOptions.introduction") !== false}
+                          onChange={(e) => {
+                            form.setValue("sectionOptions.introduction", e.target.checked);
+                            handleFormChange();
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm">Introducción</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={form.watch("sectionOptions.references") !== false}
+                          onChange={(e) => {
+                            form.setValue("sectionOptions.references", e.target.checked);
+                            handleFormChange();
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm">Referencias</span>
+                      </label>
+                    </div>
+                  </div>
 
                   {/* Action Buttons */}
                   <div className="flex flex-wrap gap-2 pt-4 border-t">

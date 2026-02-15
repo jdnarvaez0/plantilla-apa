@@ -16,6 +16,13 @@ export interface CoverPageConfig {
   authorNote?: string;
 }
 
+export interface DocumentSectionOptions {
+  coverPage?: boolean;
+  abstract?: boolean;
+  introduction?: boolean;
+  references?: boolean;
+}
+
 export interface DocumentConfig {
   id?: string;
   type: DocumentType;
@@ -32,6 +39,9 @@ export interface DocumentConfig {
   references?: Reference[];
   abstract?: string;
   keywords?: string[];
+  introduction?: string;
+  /** Opciones para incluir/excluir secciones del documento */
+  sectionOptions?: DocumentSectionOptions;
 }
 
 export interface DocumentMetadata {
