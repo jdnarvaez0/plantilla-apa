@@ -6,17 +6,17 @@
 export const APA_CONFIG = {
   // Márgenes: 2.54 cm (1 pulgada) en todos los lados
   margins: {
-    top: 1440,      // 1 pulgada
-    bottom: 1440,   // 1 pulgada
-    left: 1440,     // 1 pulgada
-    right: 1440,    // 1 pulgada
+    top: 1440, // 1 pulgada
+    bottom: 1440, // 1 pulgada
+    left: 1440, // 1 pulgada
+    right: 1440, // 1 pulgada
   },
 
   // Tipografía
   typography: {
     font: 'Times New Roman',
-    size: 24,           // 12pt = 24 half-points
-    lineSpacing: 480,   // Interlineado doble: 240 * 2
+    size: 24, // 12pt = 24 half-points
+    lineSpacing: 480, // Interlineado doble: 240 * 2
     paragraphSpacing: {
       before: 0,
       after: 0,
@@ -25,8 +25,8 @@ export const APA_CONFIG = {
 
   // Sangrías
   indentation: {
-    paragraph: 720,     // 1.27 cm (0.5 pulgadas) = 720 twips
-    reference: -720,    // Sangría francesa: -720 para hanging indent
+    paragraph: 720, // 1.27 cm (0.5 pulgadas) = 720 twips
+    reference: -720, // Sangría francesa: -720 para hanging indent
   },
 
   // Numeración de página
@@ -39,10 +39,10 @@ export const APA_CONFIG = {
   coverPage: {
     titlePosition: 'center', // Título centrado en el medio superior
     titleSpacing: {
-      before: 36,       // 18pt de espacio antes
-      after: 24,        // 12pt de espacio después
+      before: 36, // 18pt de espacio antes
+      after: 24, // 12pt de espacio después
     },
-    infoSpacing: 12,    // 6pt entre elementos de información
+    infoSpacing: 12, // 6pt entre elementos de información
   },
 
   // Encabezado (solo para versión profesional)
@@ -58,7 +58,7 @@ export const APA_CONFIG = {
     level1: {
       alignment: 'center',
       bold: true,
-      fontSize: 24,     // 12pt
+      fontSize: 24, // 12pt
     },
     level2: {
       alignment: 'left',

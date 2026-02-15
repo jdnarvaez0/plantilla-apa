@@ -1,15 +1,23 @@
 import { Injectable } from '@nestjs/common';
-import * as docx from 'docx';
-import { Document, Packer, Paragraph, TextRun, AlignmentType, Header, Footer, PageNumber, NumberFormat } from 'docx';
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  AlignmentType,
+  Header,
+  PageNumber,
+} from 'docx';
 import { APA_CONFIG } from '../../config/apa.config';
 import { ApaFormatterService } from '../apa-formatter/apa-formatter.service';
 import { DocumentConfig } from '../../common/interfaces/document-config.interface';
 import { CoverPageType } from '../../common/enums/document-type.enum';
 import { Reference } from '../../common/interfaces/reference.interface';
+import { IDocxGeneratorService } from '../../common/interfaces/service.interfaces';
 
 @Injectable()
-export class DocxGeneratorService {
-  constructor(private readonly apaFormatter: ApaFormatterService) { }
+export class DocxGeneratorService implements IDocxGeneratorService {
+  constructor(private readonly apaFormatter: ApaFormatterService) {}
 
   /**
    * Genera un documento Word completo con formato APA 7ª Edición
@@ -76,7 +84,7 @@ export class DocxGeneratorService {
 
   /**
    * Portada para VERSIÓN ESTUDIANTE — APA 7ª Edición
-   * 
+   *
    * Según APA 7th Ed. (Section 2.3):
    * - Título en negrita, centrado, en la mitad superior de la página
    *   (3-4 líneas doble espacio desde el margen superior)
@@ -90,8 +98,21 @@ export class DocxGeneratorService {
    * - Número de página "1" en la esquina superior derecha
    * - Sin running head
    */
+  /**
+   * Resolves authors from the config, handling both legacy single `author`
+   * and new `authors` array fields.
+   */
+  private resolveAuthors(
+    config: DocumentConfig,
+  ): { firstName: string; middleName?: string; lastName: string }[] {
+    if (config.authors && config.authors.length > 0) return config.authors;
+    if (config.author) return [config.author];
+    return [{ firstName: 'Autor', lastName: 'Desconocido' }];
+  }
+
   private createCoverPageStudent(config: DocumentConfig): any {
-    const { author, title, institution, course, professor, dueDate } = config;
+    const { title, institution, course, professor, dueDate } = config;
+    const authors = this.resolveAuthors(config);
     const { typography } = APA_CONFIG;
     const lineSpacing = typography.lineSpacing; // 480 = doble espacio
 
@@ -101,9 +122,11 @@ export class DocxGeneratorService {
     // APA requiere el título 3-4 líneas doble espacio desde el margen superior
     // Con doble espacio (480 twips por línea), 3 líneas vacías colocan el título correctamente
     for (let i = 0; i < 3; i++) {
-      paragraphs.push(new Paragraph({
-        spacing: { line: lineSpacing, before: 0, after: 0 },
-      }));
+      paragraphs.push(
+        new Paragraph({
+          spacing: { line: lineSpacing, before: 0, after: 0 },
+        }),
+      );
     }
 
     // === Título ===
@@ -124,26 +147,32 @@ export class DocxGeneratorService {
     );
 
     // Línea en blanco después del título (doble espacio)
-    paragraphs.push(new Paragraph({
-      spacing: { line: lineSpacing, before: 0, after: 0 },
-    }));
-
-    // === Nombre del autor ===
-    // Nombre completo, sin títulos ni grados
-    const fullName = `${author.firstName}${author.middleName ? ' ' + author.middleName : ''} ${author.lastName}`;
     paragraphs.push(
       new Paragraph({
-        alignment: AlignmentType.CENTER,
         spacing: { line: lineSpacing, before: 0, after: 0 },
-        children: [
-          new TextRun({
-            text: fullName,
-            font: typography.font,
-            size: typography.size,
-          }),
-        ],
       }),
     );
+
+    // === Nombres de los autores ===
+    // APA 7th Ed.: Cada autor en su propia línea, nombre completo, sin títulos ni grados
+    for (const author of authors) {
+      const fullName = `${author.firstName}${
+        author.middleName ? ' ' + author.middleName : ''
+      } ${author.lastName}`;
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { line: lineSpacing, before: 0, after: 0 },
+          children: [
+            new TextRun({
+              text: fullName,
+              font: typography.font,
+              size: typography.size,
+            }),
+          ],
+        }),
+      );
+    }
 
     // === Afiliación institucional ===
     // Departamento/Programa, Universidad (en la misma línea o separado)
@@ -279,7 +308,10 @@ export class DocxGeneratorService {
    * - Abstract en su propia página (si existe)
    * - Keywords en itálica debajo del abstract
    */
-  private createBodyContent(config: DocumentConfig, references?: Reference[]): Paragraph[] {
+  private createBodyContent(
+    config: DocumentConfig,
+    references?: Reference[],
+  ): Paragraph[] {
     const { typography } = APA_CONFIG;
     const lineSpacing = typography.lineSpacing;
     const paragraphs: Paragraph[] = [];
@@ -439,41 +471,43 @@ export class DocxGeneratorService {
    */
   async generateTestDocument(): Promise<Buffer> {
     const doc = new Document({
-      sections: [{
-        properties: {
-          page: {
-            margin: {
-              top: 1440,
-              bottom: 1440,
-              left: 1440,
-              right: 1440,
+      sections: [
+        {
+          properties: {
+            page: {
+              margin: {
+                top: 1440,
+                bottom: 1440,
+                left: 1440,
+                right: 1440,
+              },
             },
           },
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: 'Documento de prueba APA',
+                  bold: true,
+                  size: 24,
+                  font: 'Times New Roman',
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+            }),
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: 'Este es un documento de prueba generado con el formato APA 7ª edición.',
+                  size: 24,
+                  font: 'Times New Roman',
+                }),
+              ],
+              spacing: { line: 480 },
+            }),
+          ],
         },
-        children: [
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Documento de prueba APA',
-                bold: true,
-                size: 24,
-                font: 'Times New Roman',
-              }),
-            ],
-            alignment: AlignmentType.CENTER,
-          }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: 'Este es un documento de prueba generado con el formato APA 7ª edición.',
-                size: 24,
-                font: 'Times New Roman',
-              }),
-            ],
-            spacing: { line: 480 },
-          }),
-        ],
-      }],
+      ],
     });
 
     return await Packer.toBuffer(doc);

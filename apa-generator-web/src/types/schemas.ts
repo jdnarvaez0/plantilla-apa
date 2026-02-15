@@ -11,14 +11,14 @@ export const authorSchema = z.object({
 // Cover Page Schema
 export const coverPageSchema = z.object({
   type: z.nativeEnum(CoverPageType),
-  includePageNumber: z.boolean().default(false),
+  includePageNumber: z.boolean(),
 });
 
-// Document Schema
+// Document Schema — now with `authors` array
 export const documentSchema = z.object({
   type: z.nativeEnum(DocumentType),
   title: z.string().min(3, 'El título debe tener al menos 3 caracteres'),
-  author: authorSchema,
+  authors: z.array(authorSchema).min(1, 'Debe haber al menos un autor'),
   institution: z.string().min(2, 'La institución es requerida'),
   course: z.string().optional(),
   professor: z.string().optional(),

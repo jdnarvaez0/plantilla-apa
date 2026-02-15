@@ -1,14 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DocxGeneratorService } from '../../shared/docx-generator/docx-generator.service';
 import { GenerateDocumentDto } from './dto/generate-document.dto';
+import { IDocumentsService } from '../../common/interfaces/service.interfaces';
 
 @Injectable()
-export class DocumentsService {
+export class DocumentsService implements IDocumentsService {
   private readonly logger = new Logger(DocumentsService.name);
 
-  constructor(
-    private readonly docxGenerator: DocxGeneratorService,
-  ) {}
+  constructor(private readonly docxGenerator: DocxGeneratorService) {}
 
   /**
    * Genera un documento Word con formato APA

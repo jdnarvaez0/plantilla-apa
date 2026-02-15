@@ -7,31 +7,47 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { DocumentConfig, Reference } from '@/types/document.types';
 
 interface DocumentPreviewProps {
-  config: DocumentConfig;
+  config: Partial<DocumentConfig>;
   references: Reference[];
 }
 
 // Función para formatear autores en estilo APA
-function formatAuthors(authors: { firstName: string; middleName?: string; lastName: string }[]): string {
-  if (authors.length === 0) return '';
+function formatAuthors(authors?: { firstName?: string; middleName?: string; lastName?: string }[]): string {
+  if (!authors || authors.length === 0) return '';
   if (authors.length === 1) {
     const a = authors[0];
-    if (!a.lastName && !a.firstName) return '';
-    const middle = a.middleName ? ` ${a.middleName.charAt(0)}.` : '';
-    return `${a.lastName}, ${a.firstName.charAt(0)}.${middle}`;
+    if (!a?.lastName && !a?.firstName) return '';
+    const middle = a?.middleName ? ` ${a.middleName.charAt(0)}.` : '';
+    return `${a?.lastName || ''}, ${(a?.firstName || '').charAt(0)}.${middle}`;
   }
   if (authors.length === 2) {
     const a1 = authors[0];
     const a2 = authors[1];
-    const m1 = a1.middleName ? ` ${a1.middleName.charAt(0)}.` : '';
-    const m2 = a2.middleName ? ` ${a2.middleName.charAt(0)}.` : '';
-    return `${a1.lastName}, ${a1.firstName.charAt(0)}.${m1}, & ${a2.lastName}, ${a2.firstName.charAt(0)}.${m2}`;
+    const m1 = a1?.middleName ? ` ${a1.middleName.charAt(0)}.` : '';
+    const m2 = a2?.middleName ? ` ${a2.middleName.charAt(0)}.` : '';
+    return `${a1?.lastName || ''}, ${(a1?.firstName || '').charAt(0)}.${m1}, & ${a2?.lastName || ''}, ${(a2?.firstName || '').charAt(0)}.${m2}`;
   }
   const first = authors[0];
   const last = authors[authors.length - 1];
-  const m1 = first.middleName ? ` ${first.middleName.charAt(0)}.` : '';
-  const m2 = last.middleName ? ` ${last.middleName.charAt(0)}.` : '';
-  return `${first.lastName}, ${first.firstName.charAt(0)}.${m1}, ... ${last.lastName}, ${last.firstName.charAt(0)}.${m2}`;
+  const m1 = first?.middleName ? ` ${first.middleName.charAt(0)}.` : '';
+  const m2 = last?.middleName ? ` ${last.middleName.charAt(0)}.` : '';
+  return `${first?.lastName || ''}, ${(first?.firstName || '').charAt(0)}.${m1}, ... ${last?.lastName || ''}, ${(last?.firstName || '').charAt(0)}.${m2}`;
+}
+
+/**
+ * Formats multiple document authors for the cover page display.
+ * APA 7th Ed. rules:
+ * - 1-2 authors: list all, separated by "y"
+ * - 3+ authors: list all, last separated by "y"
+ */
+function formatCoverPageAuthors(authors?: { firstName?: string; middleName?: string; lastName?: string }[]): string[] {
+  if (!authors || authors.length === 0) return [];
+  return authors
+    .filter(a => a?.firstName || a?.lastName)
+    .map(a => {
+      const parts = [a.firstName, a.middleName, a.lastName].filter(Boolean);
+      return parts.join(' ');
+    });
 }
 
 // Función para formatear referencia en estilo APA
@@ -69,16 +85,23 @@ function formatReference(ref: Reference): string {
 }
 
 // Check if the form has meaningful data
-function hasContent(config: DocumentConfig): boolean {
+function hasContent(config: Partial<DocumentConfig>): boolean {
+  const authors = config.authors || (config.author ? [config.author] : []);
   return !!(
     config.title ||
-    config.author?.firstName ||
-    config.author?.lastName ||
+    (authors.length > 0 && (authors[0]?.firstName || authors[0]?.lastName)) ||
     config.institution
   );
 }
 
 export function DocumentPreview({ config, references }: DocumentPreviewProps) {
+  // Resolve authors from either `authors` array or legacy `author` field
+  const resolvedAuthors = useMemo(() => {
+    const authors = config.authors || (config.author ? [config.author] : []);
+    // Ensure we always have at least one author object to prevent undefined errors
+    return authors.length > 0 ? authors : [{ firstName: '', lastName: '' }];
+  }, [config.authors, config.author]);
+
   const sortedReferences = useMemo(() => {
     return [...references].sort((a, b) => {
       const aName = a.authors[0]?.lastName || '';
@@ -102,6 +125,8 @@ export function DocumentPreview({ config, references }: DocumentPreviewProps) {
   }, [config.dueDate]);
 
   const showContent = hasContent(config);
+
+  const coverPageAuthorNames = useMemo(() => formatCoverPageAuthors(resolvedAuthors), [resolvedAuthors]);
 
   // Common APA text style
   const apaTextStyle: React.CSSProperties = {
@@ -148,17 +173,17 @@ export function DocumentPreview({ config, references }: DocumentPreviewProps) {
                 {/* Línea en blanco después del título */}
                 <div style={{ height: '2em' }} />
 
-                {/* Información del autor y afiliación */}
+                {/* Información de autores y afiliación */}
                 <div className="text-center" style={apaTextStyle}>
-                  <p style={{ margin: 0 }}>
-                    {config.author?.firstName || config.author?.lastName ? (
-                      <>
-                        {config.author.firstName} {config.author.middleName ? `${config.author.middleName} ` : ''}{config.author.lastName}
-                      </>
-                    ) : (
+                  {coverPageAuthorNames.length > 0 ? (
+                    coverPageAuthorNames.map((name, idx) => (
+                      <p key={idx} style={{ margin: 0 }}>{name}</p>
+                    ))
+                  ) : (
+                    <p style={{ margin: 0 }}>
                       <span className="text-gray-300 italic">Nombre del Autor</span>
-                    )}
-                  </p>
+                    </p>
+                  )}
                   <p style={{ margin: 0 }}>
                     {config.institution || (
                       <span className="text-gray-300 italic">Institución</span>

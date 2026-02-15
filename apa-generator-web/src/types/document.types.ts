@@ -25,7 +25,10 @@ export interface CoverPageConfig {
 export interface DocumentConfig {
   type: DocumentType;
   title: string;
-  author: Author;
+  /** @deprecated Use `authors` instead */
+  author?: Author;
+  /** Multiple authors — APA 7th Ed. supports up to 20 */
+  authors: Author[];
   institution: string;
   course?: string;
   professor?: string;
