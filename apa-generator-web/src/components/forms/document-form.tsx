@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { FileText, Loader2, Download, Trash2, Save, Eye, EyeOff, X, Tag, Plus, Users, AlertCircle } from "lucide-react";
+import { FileText, Loader2, Download, Trash2, Save, Eye, EyeOff, X, Tag, Plus, Users, AlertCircle, Wand2 } from "lucide-react";
 
 // Utility to unfreeze objects from Immer/Zustand
 function unfreeze<T>(obj: T): T {
@@ -59,6 +59,7 @@ import { ReferencesManager } from "./references-manager";
 import { DataControls } from "./data-controls";
 import { ApaValidator } from "./apa-validator";
 import { DocumentPreview } from "../preview/document-preview";
+import { generateSampleData } from "@/lib/sample-data";
 
 const documentTypeLabels: Record<DocumentType, string> = {
   [DocumentType.ESSAY]: "Ensayo",
@@ -109,11 +110,22 @@ export function DocumentForm() {
       abstract: "",
       keywords: [],
       introduction: "",
+      bodySections: {
+        introduction: "",
+        method: "",
+        results: "",
+        discussion: "",
+        footnotes: "",
+      },
       sectionOptions: {
         coverPage: true,
         abstract: true,
         introduction: true,
+        method: true,
+        results: true,
+        discussion: true,
         references: true,
+        footnotes: false,
       },
     }), []),
     mode: "onChange",
@@ -151,11 +163,22 @@ export function DocumentForm() {
         abstract: documentConfig.abstract || "",
         keywords: unfreeze(documentConfig.keywords) || [],
         introduction: documentConfig.introduction || "",
+        bodySections: {
+          introduction: documentConfig.bodySections?.introduction || documentConfig.introduction || "",
+          method: documentConfig.bodySections?.method || "",
+          results: documentConfig.bodySections?.results || "",
+          discussion: documentConfig.bodySections?.discussion || "",
+          footnotes: documentConfig.bodySections?.footnotes || "",
+        },
         sectionOptions: documentConfig.sectionOptions || {
           coverPage: true,
           abstract: true,
           introduction: true,
+          method: true,
+          results: true,
+          discussion: true,
           references: true,
+          footnotes: false,
         },
       }, { keepDefaultValues: true });
 
@@ -248,11 +271,22 @@ export function DocumentForm() {
       abstract: "",
       keywords: [],
       introduction: "",
+      bodySections: {
+        introduction: "",
+        method: "",
+        results: "",
+        discussion: "",
+        footnotes: "",
+      },
       sectionOptions: {
         coverPage: true,
         abstract: true,
         introduction: true,
+        method: true,
+        results: true,
+        discussion: true,
         references: true,
+        footnotes: false,
       },
     });
     setReferences([]);
@@ -266,6 +300,69 @@ export function DocumentForm() {
     handleFormChange();
     toast.success("Borrador guardado", {
       description: "Los datos se guardaron localmente",
+    });
+  };
+
+  // Fill form with sample data
+  const handleFillSampleData = () => {
+    const sampleData = generateSampleData();
+    
+    // Convert references to the correct format with IDs
+    const referencesWithIds = sampleData.references.map((ref, index) => ({
+      ...ref,
+      id: `sample-ref-${index}`,
+    }));
+    
+    form.reset({
+      type: sampleData.type as DocumentType,
+      title: sampleData.title,
+      authors: sampleData.authors,
+      institution: sampleData.institution,
+      course: sampleData.course,
+      professor: sampleData.professor,
+      dueDate: sampleData.dueDate,
+      coverPage: { 
+        type: CoverPageType.STUDENT, 
+        includePageNumber: false,
+        runningHead: undefined,
+        authorNote: undefined,
+      },
+      abstract: sampleData.abstract,
+      keywords: sampleData.keywords,
+      introduction: sampleData.bodySections.introduction,
+      bodySections: sampleData.bodySections,
+      sectionOptions: {
+        coverPage: true,
+        abstract: true,
+        introduction: true,
+        method: true,
+        results: true,
+        discussion: true,
+        references: true,
+        footnotes: true,
+      },
+    });
+    
+    // Save to store
+    setDocumentConfig({
+      type: sampleData.type as DocumentType,
+      title: sampleData.title,
+      authors: sampleData.authors,
+      institution: sampleData.institution,
+      course: sampleData.course,
+      professor: sampleData.professor,
+      dueDate: sampleData.dueDate,
+      abstract: sampleData.abstract,
+      keywords: sampleData.keywords,
+      introduction: sampleData.bodySections.introduction,
+      bodySections: sampleData.bodySections,
+    });
+    
+    // Set references
+    setReferences(referencesWithIds as Reference[]);
+    
+    toast.success("Formulario llenado con datos de ejemplo", {
+      description: `${referencesWithIds.length} referencias agregadas. Puedes editar cualquier campo antes de generar el documento`,
     });
   };
 
@@ -768,7 +865,7 @@ export function DocumentForm() {
                   {/* Introducción */}
                   <FormField
                     control={form.control}
-                    name="introduction"
+                    name="bodySections.introduction"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>
@@ -789,7 +886,147 @@ export function DocumentForm() {
                         </FormControl>
                         <div className="flex justify-between">
                           <p className="text-xs text-muted-foreground">
-                            Contenido inicial del cuerpo del documento. Se formateará con sangría APA.
+                            Presenta el tema, el contexto y la justificación de tu trabajo.
+                          </p>
+                          <span className="text-xs text-muted-foreground">
+                            {(field.value || "").length} caracteres
+                          </span>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Método */}
+                  <FormField
+                    control={form.control}
+                    name="bodySections.method"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Método
+                          <span className="text-xs text-muted-foreground ml-1">(opcional)</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe los procedimientos, participantes, materiales y diseño de tu investigación..."
+                            className="min-h-[150px] resize-y"
+                            {...field}
+                            value={field.value || ""}
+                            onChange={(e) => {
+                              field.onChange(e.target.value);
+                              handleFormChange();
+                            }}
+                          />
+                        </FormControl>
+                        <div className="flex justify-between">
+                          <p className="text-xs text-muted-foreground">
+                            Describe cómo realizaste la investigación (participantes, procedimiento, instrumentos).
+                          </p>
+                          <span className="text-xs text-muted-foreground">
+                            {(field.value || "").length} caracteres
+                          </span>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Resultados */}
+                  <FormField
+                    control={form.control}
+                    name="bodySections.results"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Resultados
+                          <span className="text-xs text-muted-foreground ml-1">(opcional)</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Presenta los hallazgos de tu investigación de forma objetiva..."
+                            className="min-h-[150px] resize-y"
+                            {...field}
+                            value={field.value || ""}
+                            onChange={(e) => {
+                              field.onChange(e.target.value);
+                              handleFormChange();
+                            }}
+                          />
+                        </FormControl>
+                        <div className="flex justify-between">
+                          <p className="text-xs text-muted-foreground">
+                            Presenta los datos y hallazgos de tu investigación sin interpretarlos.
+                          </p>
+                          <span className="text-xs text-muted-foreground">
+                            {(field.value || "").length} caracteres
+                          </span>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Discusión */}
+                  <FormField
+                    control={form.control}
+                    name="bodySections.discussion"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Discusión
+                          <span className="text-xs text-muted-foreground ml-1">(opcional)</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Interpreta tus resultados, compara con otros estudios y menciona limitaciones..."
+                            className="min-h-[150px] resize-y"
+                            {...field}
+                            value={field.value || ""}
+                            onChange={(e) => {
+                              field.onChange(e.target.value);
+                              handleFormChange();
+                            }}
+                          />
+                        </FormControl>
+                        <div className="flex justify-between">
+                          <p className="text-xs text-muted-foreground">
+                            Interpreta los resultados, discute su significado y relaciona con la literatura.
+                          </p>
+                          <span className="text-xs text-muted-foreground">
+                            {(field.value || "").length} caracteres
+                          </span>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Notas al Final */}
+                  <FormField
+                    control={form.control}
+                    name="bodySections.footnotes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Notas al Final
+                          <span className="text-xs text-muted-foreground ml-1">(opcional)</span>
+                        </FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Agrega notas aclaratorias, agradecimientos o información adicional..."
+                            className="min-h-[100px] resize-y"
+                            {...field}
+                            value={field.value || ""}
+                            onChange={(e) => {
+                              field.onChange(e.target.value);
+                              handleFormChange();
+                            }}
+                          />
+                        </FormControl>
+                        <div className="flex justify-between">
+                          <p className="text-xs text-muted-foreground">
+                            Notas aclaratorias, agradecimientos o información complementaria.
                           </p>
                           <span className="text-xs text-muted-foreground">
                             {(field.value || "").length} caracteres
@@ -861,6 +1098,42 @@ export function DocumentForm() {
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
+                          checked={form.watch("sectionOptions.method") !== false}
+                          onChange={(e) => {
+                            form.setValue("sectionOptions.method", e.target.checked);
+                            handleFormChange();
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm">Método</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={form.watch("sectionOptions.results") !== false}
+                          onChange={(e) => {
+                            form.setValue("sectionOptions.results", e.target.checked);
+                            handleFormChange();
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm">Resultados</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={form.watch("sectionOptions.discussion") !== false}
+                          onChange={(e) => {
+                            form.setValue("sectionOptions.discussion", e.target.checked);
+                            handleFormChange();
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm">Discusión</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
                           checked={form.watch("sectionOptions.references") !== false}
                           onChange={(e) => {
                             form.setValue("sectionOptions.references", e.target.checked);
@@ -869,6 +1142,18 @@ export function DocumentForm() {
                           className="rounded border-gray-300"
                         />
                         <span className="text-sm">Referencias</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={form.watch("sectionOptions.footnotes") !== false}
+                          onChange={(e) => {
+                            form.setValue("sectionOptions.footnotes", e.target.checked);
+                            handleFormChange();
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <span className="text-sm">Notas al Final</span>
                       </label>
                     </div>
                   </div>
@@ -909,6 +1194,16 @@ export function DocumentForm() {
                       disabled={isSubmitting}
                     >
                       Probar
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleFillSampleData}
+                      title="Llenar con datos de ejemplo"
+                    >
+                      <Wand2 className="h-4 w-4 mr-2" aria-hidden="true" />
+                      Ejemplo
                     </Button>
 
                     <Button

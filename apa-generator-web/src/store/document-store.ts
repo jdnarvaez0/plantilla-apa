@@ -87,11 +87,22 @@ const createInitialConfig = (): Partial<DocumentConfig> => ({
   abstract: "",
   keywords: [],
   introduction: "",
+  bodySections: {
+    introduction: "",
+    method: "",
+    results: "",
+    discussion: "",
+    footnotes: "",
+  },
   sectionOptions: {
     coverPage: true,
     abstract: true,
     introduction: true,
+    method: true,
+    results: true,
+    discussion: true,
     references: true,
+    footnotes: false,
   },
 });
 

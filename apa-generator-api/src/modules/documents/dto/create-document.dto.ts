@@ -43,6 +43,63 @@ class AuthorDto {
   lastName: string;
 }
 
+class DocumentBodySectionsDto {
+  @ApiPropertyOptional({
+    description: 'Introducción del trabajo',
+    example: 'El desarrollo de software...',
+  })
+  @IsOptional()
+  @IsString({ message: 'La introducción debe ser un texto' })
+  @MaxLength(50000, {
+    message: 'La introducción no puede exceder 50000 caracteres',
+  })
+  introduction?: string;
+
+  @ApiPropertyOptional({
+    description: 'Sección de Método',
+    example: 'Los participantes fueron...',
+  })
+  @IsOptional()
+  @IsString({ message: 'El método debe ser un texto' })
+  @MaxLength(50000, {
+    message: 'El método no puede exceder 50000 caracteres',
+  })
+  method?: string;
+
+  @ApiPropertyOptional({
+    description: 'Sección de Resultados',
+    example: 'Los resultados indican que...',
+  })
+  @IsOptional()
+  @IsString({ message: 'Los resultados deben ser un texto' })
+  @MaxLength(50000, {
+    message: 'Los resultados no pueden exceder 50000 caracteres',
+  })
+  results?: string;
+
+  @ApiPropertyOptional({
+    description: 'Sección de Discusión',
+    example: 'Estos hallazgos sugieren que...',
+  })
+  @IsOptional()
+  @IsString({ message: 'La discusión debe ser un texto' })
+  @MaxLength(50000, {
+    message: 'La discusión no puede exceder 50000 caracteres',
+  })
+  discussion?: string;
+
+  @ApiPropertyOptional({
+    description: 'Notas al final del documento',
+    example: '1. Agradecimientos a...',
+  })
+  @IsOptional()
+  @IsString({ message: 'Las notas deben ser un texto' })
+  @MaxLength(10000, {
+    message: 'Las notas no pueden exceder 10000 caracteres',
+  })
+  footnotes?: string;
+}
+
 class DocumentSectionOptionsDto {
   @ApiPropertyOptional({
     description: 'Incluir portada',
@@ -69,12 +126,44 @@ class DocumentSectionOptionsDto {
   introduction?: boolean;
 
   @ApiPropertyOptional({
+    description: 'Incluir sección de método',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'method debe ser verdadero o falso' })
+  method?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Incluir sección de resultados',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'results debe ser verdadero o falso' })
+  results?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Incluir sección de discusión',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'discussion debe ser verdadero o falso' })
+  discussion?: boolean;
+
+  @ApiPropertyOptional({
     description: 'Incluir referencias bibliográficas',
     default: true,
   })
   @IsOptional()
   @IsBoolean({ message: 'references debe ser verdadero o falso' })
   references?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Incluir notas al final',
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'footnotes debe ser verdadero o falso' })
+  footnotes?: boolean;
 }
 
 class CoverPageConfigDto {
@@ -247,10 +336,19 @@ export class CreateDocumentDto {
   })
   @IsOptional()
   @IsString({ message: 'La introducción debe ser un texto' })
-  @MaxLength(20000, {
-    message: 'La introducción no puede exceder 20000 caracteres',
+  @MaxLength(50000, {
+    message: 'La introducción no puede exceder 50000 caracteres',
   })
   introduction?: string;
+
+  @ApiPropertyOptional({
+    description: 'Secciones del cuerpo del documento (Introducción, Método, Resultados, Discusión, Notas)',
+    type: DocumentBodySectionsDto,
+  })
+  @IsOptional()
+  @ValidateNested({ message: 'Las secciones del cuerpo son inválidas' })
+  @Type(() => DocumentBodySectionsDto)
+  bodySections?: DocumentBodySectionsDto;
 
   @ApiPropertyOptional({
     description:
@@ -260,7 +358,11 @@ export class CreateDocumentDto {
       coverPage: true,
       abstract: true,
       introduction: true,
+      method: true,
+      results: true,
+      discussion: true,
       references: true,
+      footnotes: false,
     },
   })
   @IsOptional()

@@ -255,10 +255,13 @@ export function DocumentPreview({ config, references }: DocumentPreviewProps) {
                   )}
                 </h2>
 
-                {/* Contenido de la introducción */}
-                {config.introduction ? (
+                {/* Introducción */}
+                {config.bodySections?.introduction && (
                   <div style={apaTextStyle}>
-                    {config.introduction.split('\n\n').filter(p => p.trim().length > 0).map((paragraph, index) => (
+                    <h3 className="font-bold" style={{ ...apaTextStyle, margin: '1em 0 0 0', fontSize: '12pt' }}>
+                      Introducción
+                    </h3>
+                    {config.bodySections.introduction.split('\n\n').filter(p => p.trim().length > 0).map((paragraph, index) => (
                       <p 
                         key={index} 
                         style={{ textIndent: '0.5in', margin: 0 }}
@@ -267,8 +270,62 @@ export function DocumentPreview({ config, references }: DocumentPreviewProps) {
                       </p>
                     ))}
                   </div>
-                ) : (
-                  /* Placeholder cuando no hay introducción */
+                )}
+
+                {/* Método */}
+                {config.bodySections?.method && (
+                  <div style={apaTextStyle}>
+                    <h3 className="font-bold" style={{ ...apaTextStyle, margin: '1em 0 0 0', fontSize: '12pt' }}>
+                      Método
+                    </h3>
+                    {config.bodySections.method.split('\n\n').filter(p => p.trim().length > 0).map((paragraph, index) => (
+                      <p 
+                        key={index} 
+                        style={{ textIndent: '0.5in', margin: 0 }}
+                      >
+                        {paragraph.trim()}
+                      </p>
+                    ))}
+                  </div>
+                )}
+
+                {/* Resultados */}
+                {config.bodySections?.results && (
+                  <div style={apaTextStyle}>
+                    <h3 className="font-bold" style={{ ...apaTextStyle, margin: '1em 0 0 0', fontSize: '12pt' }}>
+                      Resultados
+                    </h3>
+                    {config.bodySections.results.split('\n\n').filter(p => p.trim().length > 0).map((paragraph, index) => (
+                      <p 
+                        key={index} 
+                        style={{ textIndent: '0.5in', margin: 0 }}
+                      >
+                        {paragraph.trim()}
+                      </p>
+                    ))}
+                  </div>
+                )}
+
+                {/* Discusión */}
+                {config.bodySections?.discussion && (
+                  <div style={apaTextStyle}>
+                    <h3 className="font-bold" style={{ ...apaTextStyle, margin: '1em 0 0 0', fontSize: '12pt' }}>
+                      Discusión
+                    </h3>
+                    {config.bodySections.discussion.split('\n\n').filter(p => p.trim().length > 0).map((paragraph, index) => (
+                      <p 
+                        key={index} 
+                        style={{ textIndent: '0.5in', margin: 0 }}
+                      >
+                        {paragraph.trim()}
+                      </p>
+                    ))}
+                  </div>
+                )}
+
+                {/* Mensaje placeholder si no hay contenido */}
+                {!config.bodySections?.introduction && !config.bodySections?.method && 
+                 !config.bodySections?.results && !config.bodySections?.discussion && (
                   <div className="text-gray-300 italic text-sm" style={apaTextStyle}>
                     <p style={{ textIndent: '0.5in', margin: 0 }}>
                       El contenido de tu documento aparecerá aquí cuando se genere el archivo Word...
@@ -307,6 +364,36 @@ export function DocumentPreview({ config, references }: DocumentPreviewProps) {
                           }}
                         >
                           {formatReference(ref)}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* ===== NOTAS AL FINAL ===== */}
+              {config.bodySections?.footnotes && (
+                <>
+                  {/* Salto de página */}
+                  <div className="relative my-4">
+                    <div className="border-t-2 border-dashed border-gray-300" />
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white px-3 text-xs text-gray-400 flex items-center gap-1">
+                      <FileText className="h-3 w-3" />
+                      Notas al Final
+                    </span>
+                  </div>
+
+                  <div className="px-[1in] py-4">
+                    <h3 className="text-center font-bold" style={{ ...apaTextStyle, margin: 0, fontSize: '12pt' }}>
+                      Notas
+                    </h3>
+                    <div style={apaTextStyle}>
+                      {config.bodySections.footnotes.split('\n\n').filter(p => p.trim().length > 0).map((paragraph, index) => (
+                        <p 
+                          key={index} 
+                          style={{ textIndent: '0.5in', margin: 0 }}
+                        >
+                          {paragraph.trim()}
                         </p>
                       ))}
                     </div>

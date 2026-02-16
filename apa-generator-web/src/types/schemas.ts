@@ -27,10 +27,23 @@ export const sectionOptionsSchema = z.object({
   coverPage: z.boolean().optional(),
   abstract: z.boolean().optional(),
   introduction: z.boolean().optional(),
+  method: z.boolean().optional(),
+  results: z.boolean().optional(),
+  discussion: z.boolean().optional(),
   references: z.boolean().optional(),
+  footnotes: z.boolean().optional(),
 });
 
-// Document Schema — now with `authors` array
+// Secciones del cuerpo del documento Schema
+export const bodySectionsSchema = z.object({
+  introduction: z.string().max(50000, 'La introducción no puede exceder 50000 caracteres').optional(),
+  method: z.string().max(50000, 'El método no puede exceder 50000 caracteres').optional(),
+  results: z.string().max(50000, 'Los resultados no pueden exceder 50000 caracteres').optional(),
+  discussion: z.string().max(50000, 'La discusión no puede exceder 50000 caracteres').optional(),
+  footnotes: z.string().max(10000, 'Las notas no pueden exceder 10000 caracteres').optional(),
+});
+
+// Document Schema — now with `authors` array and body sections
 export const documentSchema = z.object({
   type: z.nativeEnum(DocumentType),
   title: z.string().min(3, 'El título debe tener al menos 3 caracteres'),
@@ -42,7 +55,9 @@ export const documentSchema = z.object({
   coverPage: coverPageSchema,
   abstract: z.string().optional(),
   keywords: z.array(z.string()).optional(),
-  introduction: z.string().max(20000, 'La introducción no puede exceder 20000 caracteres').optional(),
+  /** @deprecated Use bodySections.introduction instead */
+  introduction: z.string().max(50000, 'La introducción no puede exceder 50000 caracteres').optional(),
+  bodySections: bodySectionsSchema.optional(),
   sectionOptions: sectionOptionsSchema.optional(),
 });
 

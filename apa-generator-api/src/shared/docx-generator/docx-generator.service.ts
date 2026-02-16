@@ -36,7 +36,11 @@ export class DocxGeneratorService implements IDocxGeneratorService {
       coverPage: config.sectionOptions?.coverPage !== false,
       abstract: config.sectionOptions?.abstract !== false,
       introduction: config.sectionOptions?.introduction !== false,
+      method: config.sectionOptions?.method !== false,
+      results: config.sectionOptions?.results !== false,
+      discussion: config.sectionOptions?.discussion !== false,
       references: config.sectionOptions?.references !== false,
+      footnotes: config.sectionOptions?.footnotes !== false,
     };
 
     // Portada (opcional)
@@ -555,7 +559,7 @@ export class DocxGeneratorService implements IDocxGeneratorService {
   private createBodyContent(
     config: DocumentConfig,
     references?: Reference[],
-    opts?: { abstract?: boolean; introduction?: boolean; references?: boolean },
+    opts?: { abstract?: boolean; introduction?: boolean; method?: boolean; results?: boolean; discussion?: boolean; references?: boolean; footnotes?: boolean },
   ): Paragraph[] {
     const { typography } = APA_CONFIG;
     const lineSpacing = typography.lineSpacing;
@@ -564,7 +568,19 @@ export class DocxGeneratorService implements IDocxGeneratorService {
     // Por defecto todo true si no se especifican opciones
     const includeAbstract = opts?.abstract !== false;
     const includeIntroduction = opts?.introduction !== false;
+    const includeMethod = opts?.method !== false;
+    const includeResults = opts?.results !== false;
+    const includeDiscussion = opts?.discussion !== false;
     const includeReferences = opts?.references !== false;
+    const includeFootnotes = opts?.footnotes !== false;
+
+    // Obtener contenido de las secciones (con soporte para el formato legacy)
+    const bodySections = config.bodySections || {};
+    const introduction = bodySections.introduction || config.introduction || '';
+    const method = bodySections.method || '';
+    const results = bodySections.results || '';
+    const discussion = bodySections.discussion || '';
+    const footnotes = bodySections.footnotes || '';
 
     // === Abstract (Resumen) ===
     // APA 7th Ed.: Abstract va en su propia página después de la portada
@@ -651,10 +667,25 @@ export class DocxGeneratorService implements IDocxGeneratorService {
     );
 
     // === Introducción ===
-    // Contenido real del documento proporcionado por el usuario
-    if (includeIntroduction && config.introduction) {
-      // Dividir la introducción en párrafos (por saltos de línea)
-      const introParagraphs = config.introduction
+    if (includeIntroduction && introduction) {
+      // Título de sección - Nivel 1: Centrado, negrita (APA 7)
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { line: lineSpacing, before: lineSpacing, after: 0 },
+          children: [
+            new TextRun({
+              text: 'Introducción',
+              bold: true,
+              font: typography.font,
+              size: typography.size,
+            }),
+          ],
+        }),
+      );
+
+      // Contenido de la introducción
+      const introParagraphs = introduction
         .split('\n\n')
         .filter((p) => p.trim().length > 0);
 
@@ -673,8 +704,130 @@ export class DocxGeneratorService implements IDocxGeneratorService {
           }),
         );
       }
-    } else if (!config.introduction) {
-      // Párrafo placeholder si no hay introducción
+    }
+
+    // === Método ===
+    if (includeMethod && method) {
+      // Título de sección - Nivel 1: Centrado, negrita (APA 7)
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { line: lineSpacing, before: lineSpacing, after: 0 },
+          children: [
+            new TextRun({
+              text: 'Método',
+              bold: true,
+              font: typography.font,
+              size: typography.size,
+            }),
+          ],
+        }),
+      );
+
+      // Contenido del método
+      const methodParagraphs = method
+        .split('\n\n')
+        .filter((p) => p.trim().length > 0);
+
+      for (const methodPara of methodParagraphs) {
+        paragraphs.push(
+          new Paragraph({
+            indent: { firstLine: 720 },
+            spacing: { line: lineSpacing, before: 0, after: 0 },
+            children: [
+              new TextRun({
+                text: methodPara.trim(),
+                font: typography.font,
+                size: typography.size,
+              }),
+            ],
+          }),
+        );
+      }
+    }
+
+    // === Resultados ===
+    if (includeResults && results) {
+      // Título de sección - Nivel 1: Centrado, negrita (APA 7)
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { line: lineSpacing, before: lineSpacing, after: 0 },
+          children: [
+            new TextRun({
+              text: 'Resultados',
+              bold: true,
+              font: typography.font,
+              size: typography.size,
+            }),
+          ],
+        }),
+      );
+
+      // Contenido de resultados
+      const resultsParagraphs = results
+        .split('\n\n')
+        .filter((p) => p.trim().length > 0);
+
+      for (const resultsPara of resultsParagraphs) {
+        paragraphs.push(
+          new Paragraph({
+            indent: { firstLine: 720 },
+            spacing: { line: lineSpacing, before: 0, after: 0 },
+            children: [
+              new TextRun({
+                text: resultsPara.trim(),
+                font: typography.font,
+                size: typography.size,
+              }),
+            ],
+          }),
+        );
+      }
+    }
+
+    // === Discusión ===
+    if (includeDiscussion && discussion) {
+      // Título de sección - Nivel 1: Centrado, negrita (APA 7)
+      paragraphs.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { line: lineSpacing, before: lineSpacing, after: 0 },
+          children: [
+            new TextRun({
+              text: 'Discusión',
+              bold: true,
+              font: typography.font,
+              size: typography.size,
+            }),
+          ],
+        }),
+      );
+
+      // Contenido de la discusión
+      const discussionParagraphs = discussion
+        .split('\n\n')
+        .filter((p) => p.trim().length > 0);
+
+      for (const discussionPara of discussionParagraphs) {
+        paragraphs.push(
+          new Paragraph({
+            indent: { firstLine: 720 },
+            spacing: { line: lineSpacing, before: 0, after: 0 },
+            children: [
+              new TextRun({
+                text: discussionPara.trim(),
+                font: typography.font,
+                size: typography.size,
+              }),
+            ],
+          }),
+        );
+      }
+    }
+
+    // === Placeholder si no hay contenido en el cuerpo ===
+    if (!introduction && !method && !results && !discussion) {
       paragraphs.push(
         new Paragraph({
           indent: { firstLine: 720 },
@@ -736,6 +889,47 @@ export class DocxGeneratorService implements IDocxGeneratorService {
           }),
         );
       });
+    }
+
+    // === Notas al Final ===
+    if (includeFootnotes && footnotes) {
+      // Salto de página antes de notas
+      paragraphs.push(
+        new Paragraph({
+          pageBreakBefore: true,
+          alignment: AlignmentType.CENTER,
+          spacing: { line: lineSpacing, before: 0, after: 0 },
+          children: [
+            new TextRun({
+              text: 'Notas',
+              bold: true,
+              font: typography.font,
+              size: typography.size,
+            }),
+          ],
+        }),
+      );
+
+      // Contenido de las notas
+      const footnotesParagraphs = footnotes
+        .split('\n\n')
+        .filter((p) => p.trim().length > 0);
+
+      for (const footnotePara of footnotesParagraphs) {
+        paragraphs.push(
+          new Paragraph({
+            indent: { firstLine: 720 },
+            spacing: { line: lineSpacing, before: 0, after: 0 },
+            children: [
+              new TextRun({
+                text: footnotePara.trim(),
+                font: typography.font,
+                size: typography.size,
+              }),
+            ],
+          }),
+        );
+      }
     }
 
     return paragraphs;

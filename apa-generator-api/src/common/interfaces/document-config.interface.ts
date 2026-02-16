@@ -20,7 +20,24 @@ export interface DocumentSectionOptions {
   coverPage?: boolean;
   abstract?: boolean;
   introduction?: boolean;
+  method?: boolean;
+  results?: boolean;
+  discussion?: boolean;
   references?: boolean;
+  footnotes?: boolean;
+}
+
+export interface DocumentBodySections {
+  /** Introducción del trabajo */
+  introduction?: string;
+  /** Sección de Método (para trabajos de investigación) */
+  method?: string;
+  /** Sección de Resultados (para trabajos de investigación) */
+  results?: string;
+  /** Sección de Discusión (para trabajos de investigación) */
+  discussion?: string;
+  /** Notas al final del documento */
+  footnotes?: string;
 }
 
 export interface DocumentConfig {
@@ -39,7 +56,10 @@ export interface DocumentConfig {
   references?: Reference[];
   abstract?: string;
   keywords?: string[];
+  /** @deprecated Use bodySections.introduction instead */
   introduction?: string;
+  /** Secciones del cuerpo del documento (Introducción, Método, Resultados, Discusión) */
+  bodySections?: DocumentBodySections;
   /** Opciones para incluir/excluir secciones del documento */
   sectionOptions?: DocumentSectionOptions;
 }
