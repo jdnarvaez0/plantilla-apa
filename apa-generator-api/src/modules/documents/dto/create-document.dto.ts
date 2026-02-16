@@ -43,6 +43,40 @@ class AuthorDto {
   lastName: string;
 }
 
+class DocumentSectionOptionsDto {
+  @ApiPropertyOptional({
+    description: 'Incluir portada',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'coverPage debe ser verdadero o falso' })
+  coverPage?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Incluir resumen (abstract)',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'abstract debe ser verdadero o falso' })
+  abstract?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Incluir introducción',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'introduction debe ser verdadero o falso' })
+  introduction?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Incluir referencias bibliográficas',
+    default: true,
+  })
+  @IsOptional()
+  @IsBoolean({ message: 'references debe ser verdadero o falso' })
+  references?: boolean;
+}
+
 class CoverPageConfigDto {
   @ApiProperty({
     enum: CoverPageType,
@@ -233,38 +267,4 @@ export class CreateDocumentDto {
   @ValidateNested({ message: 'Las opciones de sección son inválidas' })
   @Type(() => DocumentSectionOptionsDto)
   sectionOptions?: DocumentSectionOptionsDto;
-}
-
-class DocumentSectionOptionsDto {
-  @ApiPropertyOptional({
-    description: 'Incluir portada',
-    default: true,
-  })
-  @IsOptional()
-  @IsBoolean({ message: 'coverPage debe ser verdadero o falso' })
-  coverPage?: boolean;
-
-  @ApiPropertyOptional({
-    description: 'Incluir resumen (abstract)',
-    default: true,
-  })
-  @IsOptional()
-  @IsBoolean({ message: 'abstract debe ser verdadero o falso' })
-  abstract?: boolean;
-
-  @ApiPropertyOptional({
-    description: 'Incluir introducción',
-    default: true,
-  })
-  @IsOptional()
-  @IsBoolean({ message: 'introduction debe ser verdadero o falso' })
-  introduction?: boolean;
-
-  @ApiPropertyOptional({
-    description: 'Incluir referencias bibliográficas',
-    default: true,
-  })
-  @IsOptional()
-  @IsBoolean({ message: 'references debe ser verdadero o falso' })
-  references?: boolean;
 }

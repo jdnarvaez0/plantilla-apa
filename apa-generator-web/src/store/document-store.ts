@@ -25,6 +25,7 @@ interface DocumentState {
   isLoading: boolean;
   error: string | null;
   lastSaved: Date | null;
+  hasHydrated: boolean; // Indica si los datos de localStorage ya fueron cargados
 }
 
 // ============================================
@@ -51,6 +52,7 @@ interface DocumentActions {
   clearAll: () => void;
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
+  setHasHydrated: (hydrated: boolean) => void;
   
   // Utility actions
   exportData: () => string;
@@ -99,6 +101,7 @@ const initialState: DocumentState = {
   isLoading: false,
   error: null,
   lastSaved: null,
+  hasHydrated: false,
 };
 
 // ============================================
@@ -229,6 +232,12 @@ export const useDocumentStore = create<DocumentStore>()(
           return false;
         }
       },
+      
+      setHasHydrated: (hydrated: boolean) => {
+        set((state) => {
+          state.hasHydrated = hydrated;
+        });
+      },
     })),
     {
       name: "apa-document-storage-v2",
@@ -268,6 +277,13 @@ export const useDocumentStore = create<DocumentStore>()(
         }
         return persistedState as DocumentState;
       },
+      
+      // Called when the store has been rehydrated from storage
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.setHasHydrated(true);
+        }
+      },
     }
   )
 );
@@ -281,6 +297,7 @@ export const selectReferences = (state: DocumentStore) => state.references;
 export const selectIsLoading = (state: DocumentStore) => state.isLoading;
 export const selectError = (state: DocumentStore) => state.error;
 export const selectLastSaved = (state: DocumentStore) => state.lastSaved;
+export const selectHasHydrated = (state: DocumentStore) => state.hasHydrated;
 
 // Derived selectors
 export const selectAuthorsCount = (state: DocumentStore) => 

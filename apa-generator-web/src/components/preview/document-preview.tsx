@@ -255,12 +255,26 @@ export function DocumentPreview({ config, references }: DocumentPreviewProps) {
                   )}
                 </h2>
 
-                {/* Placeholder del contenido */}
-                <div className="text-gray-300 italic text-sm" style={apaTextStyle}>
-                  <p style={{ textIndent: '0.5in', margin: 0 }}>
-                    El contenido de tu documento aparecerá aquí cuando se genere el archivo Word...
-                  </p>
-                </div>
+                {/* Contenido de la introducción */}
+                {config.introduction ? (
+                  <div style={apaTextStyle}>
+                    {config.introduction.split('\n\n').filter(p => p.trim().length > 0).map((paragraph, index) => (
+                      <p 
+                        key={index} 
+                        style={{ textIndent: '0.5in', margin: 0 }}
+                      >
+                        {paragraph.trim()}
+                      </p>
+                    ))}
+                  </div>
+                ) : (
+                  /* Placeholder cuando no hay introducción */
+                  <div className="text-gray-300 italic text-sm" style={apaTextStyle}>
+                    <p style={{ textIndent: '0.5in', margin: 0 }}>
+                      El contenido de tu documento aparecerá aquí cuando se genere el archivo Word...
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* ===== REFERENCIAS ===== */}

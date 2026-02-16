@@ -54,7 +54,7 @@ import {
 import { documentSchema, type DocumentFormData } from "@/types/schemas";
 import { DocumentType, CoverPageType, type GenerateDocumentRequest, type Reference } from "@/types/document.types";
 import { apiService } from "@/services/api";
-import { useDocumentStore, selectDocumentConfig, selectReferences, selectIsLoading } from "@/store/document-store";
+import { useDocumentStore, selectDocumentConfig, selectReferences, selectIsLoading, selectHasHydrated } from "@/store/document-store";
 import { ReferencesManager } from "./references-manager";
 import { DataControls } from "./data-controls";
 import { ApaValidator } from "./apa-validator";
@@ -86,6 +86,7 @@ export function DocumentForm() {
   const documentConfig = useDocumentStore(selectDocumentConfig);
   const references = useDocumentStore(selectReferences);
   const storeIsLoading = useDocumentStore(selectIsLoading);
+  const hasHydrated = useDocumentStore(selectHasHydrated);
   const { setDocumentConfig, setReferences, clearAll } = useDocumentStore();
 
   // Form setup with React Hook Form + Zod
@@ -124,9 +125,10 @@ export function DocumentForm() {
     name: "authors",
   });
 
-  // Load data from store on mount
+  // Load data from store when it has been rehydrated from localStorage
   useEffect(() => {
-    if (documentConfig.type && !isInitialized.current) {
+    // Only initialize form when store has loaded from localStorage and not already initialized
+    if (hasHydrated && !isInitialized.current) {
       // Migrate old single-author to authors array
       const authors = documentConfig.authors ||
         (documentConfig.author ? [documentConfig.author] : [{ firstName: "", middleName: "", lastName: "" }]);
@@ -159,7 +161,7 @@ export function DocumentForm() {
 
       isInitialized.current = true;
     }
-  }, [documentConfig, form]);
+  }, [hasHydrated, documentConfig, form]);
 
   // Debounced save to store
   const handleFormChange = useCallback(() => {
@@ -278,6 +280,34 @@ export function DocumentForm() {
       references,
     };
   }, [watchedValues, references]);
+
+  // Show loading state while rehydrating from localStorage
+  if (!hasHydrated) {
+    return (
+      <div className="space-y-6">
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" aria-hidden="true" />
+                  Generar Documento APA
+                </CardTitle>
+                <CardDescription className="mt-1.5">
+                  Cargando datos guardados...
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -784,7 +814,9 @@ export function DocumentForm() {
                   {/* Selector de Secciones */}
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <FormLabel className="text-base">Secciones a incluir</FormLabel>
+                      <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Secciones a incluir
+                      </label>
                       <span className="text-xs text-muted-foreground">
                         Personaliza qué páginas generar
                       </span>
